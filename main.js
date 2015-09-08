@@ -23,11 +23,11 @@ $(function(){
 		this.content = content
 		this.alert()
 		
-		var firefox = navigator.userAgent.indexOf('Firefox') != -1;//兼容的禁止滚轮事件
-		firefox ? window.addEventListener('DOMMouseScroll', MouseWheel, false) :
-			(window.onmousewheel = MouseWheel);
-
-		function MouseWheel(e) {
+		this.firefox = navigator.userAgent.indexOf('Firefox') != -1;//兼容的禁止滚轮事件
+		this.firefox ? $(window).on('DOMMouseScroll', stop, false) :
+			(window.onmousewheel = stop);
+		
+		function  stop(e) {
 			e = e || window.event;
 
 			if (e.stopPropagation) e.stopPropagation();
@@ -40,15 +40,17 @@ $(function(){
 	}
 	smile.prototype.alert = function () {
 		var This = this
-		$('body').append($('<div id="alert"><p><span>X</span></p></div>'))
+		$('body').append($('<div id="alert"><p><span></span><span class="btn">X</span></p></div>'))
 		$('#alert').css('top',$(document).scrollTop())
 		setTimeout(function() { //给浏览器渲染个时间
 			$('#alert p').attr('class', 'active')
 		}, 20)
-		$('#alert span').on('click', function() {//添加关闭
-			$('#alert').remove()
+		$('#alert .btn').on('click', function() {//添加关闭
+			$('#alert').remove()//移除弹窗
+			clearInterval(This.timer)//清除打字定时器
+			This.firefox ? $(window).off() : (window.onmousewheel = null)//兼容的恢复滚轮事件
 		})
-		setTimeout(function(){
+		setTimeout(function(){//打字效果
 			This.typer()
 		},200)
 	}
@@ -62,29 +64,17 @@ $(function(){
 					This.explain()
 				},1000)
 			}
-			$('#alert p')[0].innerHTML += This.content.charAt(i)
+			$('#alert span')[0].innerHTML += This.content.charAt(i)
 			i++
 		},100)
 	}
 	smile.prototype.explain = function () {
+		var This = this
 		$('#alert p').html('').css('font-size','40px')
 		$('#alert p')[0].innerHTML = '看简历辛苦了，希望这个老梗能轻松一下!'
 		setTimeout(function(){
 			$('#alert').remove()
-			var firefox = navigator.userAgent.indexOf('Firefox') != -1;//兼容的恢复滚轮事件
-			firefox ? window.removeEventListener('DOMMouseScroll', MouseWheel, false) :
-				(window.onmousewheel = null);
-
-			function MouseWheel(e) {
-				e = e || window.event;
-
-				if (e.stopPropagation) e.stopPropagation();
-				else e.cancelBubble = true;
-
-				if (e.preventDefault) e.preventDefault();
-				else e.returnValue = false;
-
-			}
+			This.firefox ? $(window).off() : (window.onmousewheel = null)//兼容的恢复滚轮事件
 		},3000)
 	}
 })
